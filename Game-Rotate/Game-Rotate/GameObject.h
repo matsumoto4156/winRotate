@@ -22,6 +22,8 @@ public:
 	void SetStagenum();
 	// 当たり判定のときに呼ばれる関数
 	virtual void CollideDo();
+	// 動きを止める
+	virtual void IsKeynematic(float time) {};
 
 	// ゲッター・セッター
 	void SetState(State state) { mState = state; };
@@ -34,16 +36,16 @@ public:
 	vector2 GetPos() { return mPosition; };
 	int GetScale() { return mScale; };
 	float GetRotation() { return mRotation; };
-	Game* GetGame() { return mGame; };
+	class Game* GetGame() { return mGame; };
 	int GetStagenum() { return mStagenum; };
 	// 実際にまわすの関数
-	void Go(bool go) { if (mIsRotate)  mGo = go; };
+	void Go(bool go) { mGo = go; };
 	bool CanGo() { return mGo; }
 	// コンポーネント追加消去
 	void AddComponent(class Component* Component);
 	void RemoveComponent(class Component* Component);
 
-	// プレイヤー用（ORしてね）
+	// 地面判定用（ORしてね）
 	virtual bool GetGround() { return false; };
 protected:
 	// オブジェクトの状態

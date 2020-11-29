@@ -1,11 +1,13 @@
 #include "Background.h"
 #include "SpriteComponent.h"
+#include "RotateComponent.h"
 
-Background::Background(Game* Game, vector2 position, int scale) :
+Background::Background(Game* Game, vector2 position, int scale, const char* filename) :
 	GameObject(Game, position, scale),
-	mRect(0)
+	mRect(0),
+	mFilename(filename)
 {
-	mRect = new RectSprite(this, 0);
+	TextureSprite* mRect = new TextureSprite(this, 0, mFilename);
 	mRect->SetDrawOrder(0);
 }
 

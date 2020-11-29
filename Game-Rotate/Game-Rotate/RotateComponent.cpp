@@ -7,7 +7,7 @@
 RotateComponent::RotateComponent(class GameObject* owner, int updateOrder) :
 	Component(owner, updateOrder),
 	mStageLoc(0),
-	mDeltaRotate(5 / 180.0f),
+	mDeltaRotate(70 / 180.0f),
 	mSumRotate(0.0f),
 	mToRotation(0.0f)
 {
@@ -58,8 +58,6 @@ void RotateComponent::Rotate(float deltaTime){
 			mOwner->SetPos(mToPosition);
 			mOwner->SetRotation(mToRotation);
 			mOwner->Go(false);
-			// “ü—Í‚ðÄŠJ
-			mOwner->GetGame()->StartInput();
 		}
 	}
 }

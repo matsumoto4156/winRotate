@@ -13,7 +13,7 @@ public:
 		Uint8 alpha = 0;
 	};
 	SpriteComponent(class GameObject* owner, int updateOrder);
-	~SpriteComponent();
+	virtual ~SpriteComponent();
 	void Update(float delataTime) {};
 	// 描写の順番を決める（デフォは1）
 	void SetDrawOrder(int order) { mDrawOrder = order; };

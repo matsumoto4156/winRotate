@@ -5,7 +5,7 @@
 GravityComponent::GravityComponent(class GameObject* owner, int updateOrder):
 	Component(owner, updateOrder),
 	mGravity(0.0f),
-	mMaxGravity(10.0f),
+	mMaxGravity(500.0f),
 	mGround(false){
 }
 
@@ -19,9 +19,9 @@ void GravityComponent::Update(float deltaTime) {
 	}
 	else{
 		if (mGravity < mMaxGravity) {
-			mGravity += 0.7f;
+			mGravity += 50.0f;
 		}
 	}
-		pos.y += mGravity;
+		pos.y += mGravity * deltaTime;
 		mOwner->SetPos(pos);
 }

@@ -24,7 +24,7 @@ Game::Game() :
 	mPlayer(0),
 	mLeftTops(0),
 	mPManager(0),
-	mIsInput(true)
+	mSize(0)
 {
 
 }
@@ -71,18 +71,7 @@ bool Game::Initialize() {
 	//画像
 	IMG_Init(IMG_INIT_PNG);
 
-	// ステージ系
-	// 初期化
-	mLeftTops = new vector2[8];
-	mLeftTops[0] = { 112, 450 };
-	mLeftTops[1] = { 512, 450 };
-	mLeftTops[2] = { 512, 50 };
-	mLeftTops[3] = { 112, 50 };
-	mLeftTops[4] = { 87, 475 };
-	mLeftTops[5] = { 537, 475 };
-	mLeftTops[6] = { 537, 25 };
-	mLeftTops[7] = { 87, 25 };
-
+	// データ読み込み
 	LoadData();
 
 
@@ -175,13 +164,11 @@ vector2 Game::GetStageLoc(int stageNumber) {
 
 // 回転を行う
 void Game::Rotate(int stage) {
-	// 入力を止める
-	mIsInput = false;
-	mPlayer ->Stop();
 	// オブジェクトの更新
 	mUpdatingObjects = true;
 	for (GameObject* object : mObjects) {
-		if (object->GetStagenum() == stage) {
+		object->IsKeynematic(1.5f);
+		if (object->GetStagenum() == stage && object->GetIsRotate()) {
 			object->Go(true);
 		}
 	}
@@ -193,41 +180,61 @@ void Game::Rotate(int stage) {
 
 
 
+
+
 // 最初のロードを行う
 void Game::LoadData() {
-	MakeBack();
 	LoadStage();
+	MakeBack();
 	mPManager = new PhisicManager();
 
 	vector2 pos;
-
+	int target = 0;
+	// それぞれのステージについて行う
 	for (int i = 0; i < 4; ++i) {
-		float x = GetStageLoc(4 + i).x;
-		float y = GetStageLoc(4 + i).y;
+
+		float x = GetStageLoc(4 + i).x + mSize/2;
+		float y = GetStageLoc(4 + i).y + mSize/2;
+		// 場所を特定するために一つずつ取り出す
 		for (int k = 0; k < mStage.GetY(); ++k) {
 			for (int l = 0; l < mStage.GetX(); ++l) {
-				if (0 < mStage(l, k, i) ) {
+
+				// もし中身があれば
+				if (0 < (target = mStage(l, k, i)) ) {
+					pos.x = x + mSize * l;
+					pos.y = y + mSize * k;
+
 					// ステージ関係(5まで)
-					if (mStage(l, k, i) <= 5) {
-						pos.x = x + 50 * l;
-						pos.y = y + 50 * k;
-						WallBlock* wBlock = new WallBlock(this, pos, 50);
-						if (mStage(l, k, i) == 2) wBlock->SetRotation(1.0f);
-						else if (mStage(l, k, i) == 3) wBlock->SetRotation(0.5f);
-						else if (mStage(l, k, i) == 4) wBlock->SetRotation(1.5f);
+					if (target <= 5) {
+						WallBlock* wBlock = new WallBlock(this, pos, mSize);
+						if (target == 2) wBlock->SetRotation(1.0f);
+						else if (target == 3) wBlock->SetRotation(0.5f);
+						else if (target == 4) wBlock->SetRotation(1.5f);
+					}
+					// 回るブロック
+					else if (target == 10) {
+						RotateBlock* rBlock = new RotateBlock(this, pos, mSize);
+						rBlock->SetIsRotate(true);
+					}
+					// くっつくブロック
+					else if (target == 11) {
+						StickBlock* sBlock = new StickBlock(this, pos, mSize);
 					}
 					// Flag
-					else if (mStage(l, k, i) == 6) {
-						pos.x = x + 50 * l;
-						pos.y = y + 50 * k;
-						Flag* flag = new Flag(this, pos, 50, 0);
+					else if (6 <= target && target <= 9) {
+						Flag* flag;
+						if (target == 6) flag = new Flag(this, pos, mSize, target - 6, "Image/Flag0.png");
+						else {
+							if (target == 7) flag = new Flag(this, pos, mSize, target - 6, "Image/Flag1.png");
+							else if (target == 8) flag = new Flag(this, pos, 50, target - 6, "Image/Flag2.png");
+							else  flag = new Flag(this, pos, mSize, target - 6, "Image/Flag3.png");
+							flag->SetIsRotate(true);
+						}
 					}
-					// ブロック
-					else if (mStage(l, k, i) == 7) {
-						pos.x = x + 50 * l;
-						pos.y = y + 50 * k;
-						RotateBlock* rBlock = new RotateBlock(this, pos, 50);
-						rBlock->SetIsRotate(true);
+					// 想定外
+					else {
+						SDL_Log("Error!!(LoadStage)");
+						return;
 					}
 				}
 			}
@@ -235,8 +242,8 @@ void Game::LoadData() {
 	}
 
 	// プレイヤーを生成
-	pos = {450, 520 };
-	mPlayer = new Player(this, pos, 50);
+	pos = {510 , 300 };
+	mPlayer = new Player(this, pos, 38);
 	mPManager->SetPlayer(mPlayer);
 }
 
@@ -274,6 +281,24 @@ void Game::LoadStage() {
 	// メモリ開放
 	delete[] buffa;
 	mStage.Show();
+	mSize = 800 / (lendth - 2);
+	// ステージを作る座標を確定
+	InitStageLoc();
+}
+
+// ステージ座標の読み取り
+void Game::InitStageLoc() {
+	float size = static_cast<float>(mSize);
+	// 初期化
+	mLeftTops = new vector2[8];
+	mLeftTops[0] = { 112, 450 };
+	mLeftTops[1] = { 512, 450 };
+	mLeftTops[2] = { 512, 50 };
+	mLeftTops[3] = { 112, 50 };
+	mLeftTops[4] = mLeftTops[0] - vector2{size, 0};
+	mLeftTops[5] = mLeftTops[1];
+	mLeftTops[6] = mLeftTops[2] - vector2{ 0, size };
+	mLeftTops[7] = mLeftTops[3] - vector2{ size, size };
 }
 
 // 背景描写
@@ -282,34 +307,24 @@ void Game::MakeBack() {
 	SpriteComponent::Color color;
 
 	pos = { 312, 650 };
-	Background* back1 = new Background(this, pos, 400);
-	color = { 200, 0, 0, 0 };
-	back1->SetColor(color);
+	Background* back1 = new Background(this, pos, 400, "Image/Stage0.png");
 	back1->SetIsRotate(true);
 
 	pos = { 712, 650 };
-	Background* back2 = new Background(this, pos, 400);
-	color = { 0, 200, 0, 0 };
-	back2->SetColor(color);
-	back1->SetIsRotate(true);
+	Background* back2 = new Background(this, pos, 400, "Image/Stage1.png");
+	back2->SetIsRotate(true);
 
 	pos = { 712, 250 };
-	Background* back3 = new Background(this, pos, 400);
-	color = { 0, 0, 200, 0 };
-	back3->SetColor(color);
-	back1->SetIsRotate(true);
+	Background* back3 = new Background(this, pos, 400, "Image/Stage2.png");
+	back3->SetIsRotate(true);
 
 	pos = { 312, 250 };
-	Background* back4 = new Background(this, pos, 400);
-	color = { 255, 255, 0, 0 };
-	back4->SetColor(color);
-	back1->SetIsRotate(true);
+	Background* back4 = new Background(this, pos, 400, "Image/Stage3.png");
+	back4->SetIsRotate(true);
 }
 
 // 入力関係
 void Game::ProcessInput() {
-	// 入力を受け付けるか判断
-	if (!mIsInput) return;
 
 
 	// イベントを取得
@@ -357,7 +372,7 @@ void Game::UpdateGame() {
 	mPManager->ManagePlayer();
 }
 
-// 特別な描写
+// 描写
 void Game::GenerateOutput() {
 
 	SDL_SetRenderDrawColor(mRenderer, 118, 118, 118, 255);
@@ -366,10 +381,10 @@ void Game::GenerateOutput() {
 	for (auto sp : mSprites) {
 		sp->Draw(mRenderer);
 	}
-	for (int y = 0; y < 16; y++) {
-		for (int x = 0; x < 16; x++) {
+	for (int y = 0; y < 20; y++) {
+		for (int x = 0; x < 20; x++) {
 			SDL_SetRenderDrawColor(mRenderer, 112, 112, 112, 112);
-			SDL_Rect back{ 112+x*50, 50+y*50, 50, 50 };
+			SDL_Rect back{ 112+x*40, 50+y*40, 40, 40 };
 			SDL_RenderDrawRect(mRenderer, &back);
 		}
 	}

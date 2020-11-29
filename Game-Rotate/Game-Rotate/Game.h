@@ -32,17 +32,15 @@ public:
 	class PhisicManager* GetPManager() { return mPManager; };
 	// 回転を行う
 	void Rotate(int stage);
-	// 入力を再開する
-	void StartInput() { mIsInput = true; };
 	
 
 private:
-	// 入力を止める
-	void StopInput() { mIsInput = false; };
 	// 最初のロードを行う
 	void LoadData();
 	// ステージの読み取り
 	void LoadStage();
+	// ステージ座標の読み取り
+	void InitStageLoc();
 	// 背景を描写する
 	void MakeBack();
 	// ループのヘルパー関数群
@@ -59,7 +57,7 @@ private:
 	SDL_Window* mWindow;
 	SDL_Renderer* mRenderer;
 	bool mIsRunning;
-	Uint8 mPreviousTime;
+	Uint32 mPreviousTime;
 
 	// テクスチャーのマップ
 	std::unordered_map<const char*, SDL_Texture*> mTextures;
@@ -77,6 +75,6 @@ private:
 	vector2* mLeftTops;
 	// 物理かんりのクラス
 	class PhisicManager* mPManager;
-	// インプット
-	bool mIsInput;
+	// 人マス当たりの大きさ
+	int mSize;
 };

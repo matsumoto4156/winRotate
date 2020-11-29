@@ -162,7 +162,7 @@
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="SpriteComponent.cpp" />
     <ClCompile Include="Stage.cpp" />
-    <ClCompile Include="Collider.cpp" />
+    <ClCompile Include="ColliderComponent.cpp" />
     <ClCompile Include="RotateComponent.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -178,7 +178,7 @@
     <ClInclude Include="SpriteComponent.h" />
     <ClInclude Include="Stage.h" />
     <ClInclude Include="vector2.h" />
-    <ClInclude Include="Collider.h" />
+    <ClInclude Include="ColliderComponent.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

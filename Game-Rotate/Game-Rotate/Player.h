@@ -14,6 +14,8 @@ public:
 	void UpdateObject(float deltaTime);
 	// 入力に応じてオブジェクトを動かす
 	void InputMove(const uint8_t* keyState);
+	// 動きを止める
+	void IsKeynematic(float time);
 	// 地面についているか判断
 	void SetCencer(unsigned char cencer) { mCencer = cencer; };
 	bool GetGround() { return mCencer & FOOT; };
@@ -51,4 +53,6 @@ private:
 	// センサー
 	unsigned char mCencer;
 	class PlayerCollider* mPlayerCollider;
+	// 止める時間
+	float mWaitTime;
 };

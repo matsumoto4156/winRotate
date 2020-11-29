@@ -3,13 +3,15 @@
 #include "SDL.h"
 #include "PhisicManager.h"
 #include "GravityComponent.h"
-#include "Collider.h"
+#include "ColliderComponent.h"
 #include <algorithm>
+
+#include <iostream>
 
 Player::Player(Game* Game, vector2 position, int scale) :
 	GameObject(Game, position, scale),
 	mMoveSpeed(0.0f),
-	mMaxSpeed(15.0f),
+	mMaxSpeed(500.0f),
 	mRightKey(SDL_SCANCODE_RIGHT),
 	mLeftKey(SDL_SCANCODE_LEFT),
 	mJumpKey(SDL_SCANCODE_SPACE),
@@ -17,7 +19,8 @@ Player::Player(Game* Game, vector2 position, int scale) :
 	mFilename(0),
 	mCencer(0),
 	mIsJump(true),
-	mPlayerCollider(0)
+	mPlayerCollider(0),
+	mWaitTime(0.0f)
 {
 	ResetSwitchTime();
 	InitializeTexture();
@@ -30,47 +33,51 @@ Player::~Player() {
 }
 // 独自の更新関数
 void Player::UpdateObject(float deltaTime) {
-	//SDL_Log("%d", mCencer);
+	// ウゴキヲトメル
+	if (mWaitTime != 0.0f) {
+		mWaitTime -= deltaTime;
+		if (mWaitTime <= 0.0f) {
+			mWaitTime = 0.0f;
+			mCencer |= 4;
+		}
+		else return;
+	}
 
 	if (mMoveSpeed != 0.0f) {
 		// 前にぶつかるとスピード大幅減
 		if (mCencer & FORWARD) {
-			mMoveSpeed *= 0.5f;
+			mMoveSpeed = 0.0f;
+			mJumpForce *= 0.2f;
 		}
 		else {
-			// 方向を変える
-			mTexts[mTextNum]->SetFlip(mDirection);
 			// 移動とそのスピードに応じてスプライトを交換
 			mPosition.x += mDirection * mMoveSpeed * deltaTime;
 			SwitchText(mMoveSpeed * deltaTime);
-			mMoveSpeed *= 0.96f;
+			mMoveSpeed *= 0.95f;
 		}
 
 		// 0に近いとき0にする
-		if (mMoveSpeed < 1.0f) {
+		if (mMoveSpeed < 5.0f) {
 			mMoveSpeed = 0.0f;
 			ResetSwitchTime();
 		}
 	}
 	if (mJumpForce != 0.0f) {
 		if(mCencer & HEAD){
-			mJumpForce *= 0.3f;
+			mJumpForce *= 0.2f;
 		}
 		else {
 			mPosition.y -= mJumpForce * deltaTime;
-			mJumpForce -= 1.2f;
+			mJumpForce -= 40.0f;
 		}
 
-		if (mJumpForce < 0.3f) {
+		if (mJumpForce < 1.0f) {
 			mJumpForce = 0.0f;
 		}
 	}
 
-
-	// 前にぶつかるとスピード大幅減
-	if (mCencer & FORWARD) {
-		mMoveSpeed = 3.0f;
-	}
+	// 方向を変える
+	mTexts[mTextNum]->SetFlip(mDirection);
 }
 // 入力に応じてオブジェクトを動かす
 void Player::InputMove(const uint8_t* keyState) {
@@ -78,7 +85,7 @@ void Player::InputMove(const uint8_t* keyState) {
 	// ジャンプ (地面かつ前のフレームで押されていない)
 	if (keyState[mJumpKey]){
 		if ((mCencer & FOOT) && !mIsJump) {
-			mJumpForce = 30.0f;
+			mJumpForce = 1000.0f;
 		}
 		mIsJump = true;
 	}
@@ -95,7 +102,7 @@ void Player::InputMove(const uint8_t* keyState) {
 				mDirection = 1;
 			}
 			if (mMaxSpeed > mMoveSpeed) {
-				mMoveSpeed += 3;
+				mMoveSpeed += 50;
 			}
 		}
 		else if (keyState[mLeftKey]) {
@@ -105,10 +112,15 @@ void Player::InputMove(const uint8_t* keyState) {
 				mDirection = -1;
 			}
 			if (mMaxSpeed > mMoveSpeed) {
-				mMoveSpeed += 5;
+				mMoveSpeed += 50;
 			}
 		}
 	}
+}
+
+// 動きを止める
+void Player::IsKeynematic(float time) {
+	mWaitTime = time;
 }
 
 void Player::SetPos(vector2 position){

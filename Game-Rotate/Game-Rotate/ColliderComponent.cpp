@@ -1,15 +1,33 @@
-#include "Collider.h"
+#include "ColliderComponent.h"
 #include "GameObject.h"
 #include "Game.h"
 #include "PhisicManager.h"
 
+//////////////////// class Collider ///////////////////////////
+ColliderComponent::ColliderComponent(class GameObject* owner, int updateOrder) :
+	Component(owner, updateOrder)
+{
+}
+ColliderComponent::~ColliderComponent() {
+
+}
+// 毎回呼び出す
+void ColliderComponent::SetLoc(){
+	mPos = mOwner->GetPos();
+	float scale = static_cast<float>(mOwner->GetScale());
+	mRightTop = mPos - vector2{ -(scale / 2), scale / 2 };
+	mLeftBottom = mPos + vector2{ -(scale / 2), scale / 2 };
+}
+
+
 
 //////////////////// class BoxCollider ///////////////////////////
 BoxCollider::BoxCollider(GameObject* owner, int updateOrder, bool isCollide) :
-	Component(owner, updateOrder),
+	ColliderComponent(owner, updateOrder),
 	mCollide(isCollide)
 {
 	mOwner->GetGame()->GetPManager()->AddBox(this);
+	SetLoc();
 }
 
 BoxCollider::~BoxCollider() {
@@ -19,14 +37,6 @@ BoxCollider::~BoxCollider() {
 void BoxCollider::Update(float deltaTime) {
 	SetLoc();
 }
-// 位置が変更されたときに呼び出す
-void BoxCollider::SetLoc() {
-	mPos = mOwner->GetPos();
-	float scale = static_cast<float>(mOwner->GetScale());
-	mRightTop = mPos - vector2{ -(scale / 2), scale / 2 };
-	mLeftBottom = mPos + vector2{ -(scale / 2), scale / 2 };
-}
-// ぶつかっているとき呼ばれる
 void BoxCollider::OnCollider() {
 	mOwner->CollideDo();
 }
@@ -37,7 +47,7 @@ void BoxCollider::OnCollider() {
 
 //////////////////// class PlayerCollider ///////////////////////////
 PlayerCollider::PlayerCollider(GameObject* owner, int updateOrder) :
-	Component(owner, updateOrder)
+	ColliderComponent(owner, updateOrder)
 {
 	SetLoc();
 	Update(0.0f);
@@ -66,12 +76,5 @@ void PlayerCollider::Update(float deltaTime) {
 		mStageFlag += 8;
 	}
 
-}
-// 位置が変更されたときに呼び出す
-void PlayerCollider::SetLoc() {
-	mPos = mOwner->GetPos();
-	float scale = static_cast<float>(mOwner->GetScale());
-	mRightTop = mPos - vector2{ -(scale / 2 - 5), scale / 2 - 10};
-	mLeftBottom = mPos + vector2{ -(scale / 2 - 5), scale / 2 };
 }
 

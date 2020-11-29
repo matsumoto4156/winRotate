@@ -1,8 +1,10 @@
 #include "Block.h"
 #include "SpriteComponent.h"
 #include "Game.h"
-#include "Collider.h"
+#include "PhisicManager.h"
+#include "ColliderComponent.h"
 #include "RotateComponent.h"
+#include "GravityComponent.h"
 
 
 ////////////////////// Class Block //////////////////////
@@ -10,13 +12,9 @@ Block::Block(Game* Game, vector2 position, int scale) :
 	GameObject(Game, position, scale),
 	mFilename(0)
 {
-	BoxCollider* box = new BoxCollider(this, 0);
 }
 Block::~Block() {
 
-}
-// 独自の更新関数
-void Block::UpdateObject() {
 }
 
 
@@ -27,6 +25,7 @@ RotateBlock::RotateBlock(Game* Game, vector2 position, int scale) :
 {
 	mFilename = "Image/Block.png";
 	TextureSprite* text = new TextureSprite(this, 0, mFilename);
+	BoxCollider* box = new BoxCollider(this, 0);
 }
 RotateBlock::~RotateBlock() {
 
@@ -41,21 +40,63 @@ WallBlock::WallBlock(Game* Game, vector2 position, int scale) :
 {
 	mFilename = "Image/Wall.png";
 	TextureSprite* text = new TextureSprite(this, 0, mFilename);
+	BoxCollider* box = new BoxCollider(this, 0);
 }
 WallBlock::~WallBlock() {
 
 }
 
 
+
+////////////// Class StickBlock /////////////////////
+StickBlock::StickBlock(Game* Game, vector2 position, int scale) :
+	Block(Game, position, scale) ,
+	mWaitTime(0.0f),
+	mFilename(0),
+	mGround(0)
+{
+	mFilename = "Image/Stick.png";
+	TextureSprite* text = new TextureSprite(this, 0, mFilename);
+	GravityComponent* gra = new GravityComponent(this, 0);
+	BoxCollider* box = new BoxCollider(this, 0);
+	GetGame()->GetPManager()->AddMove(box);
+}
+StickBlock::~StickBlock() {
+
+}
+
+// 独自の更新関数
+void StickBlock::UpdateObject(float deltaTime) {
+	if (mWaitTime != 0.0f) {
+		mWaitTime -= deltaTime;
+		SetGround(true);
+		//　時間がたったら 重力を戻す
+		if (mWaitTime <= 0.0f) {
+			mWaitTime = 0.0f;
+			SetGround(false);
+		}
+	}
+}
+// 動きを止める
+void StickBlock::IsKeynematic(float time) {
+	mWaitTime = time;
+}
+
+
+
+
+
+
+
+
 /////////////// Class Flag /////////////////
-Flag::Flag(Game* game, vector2 position, int scale, int stage) :
+Flag::Flag(Game* game, vector2 position, int scale, int stage, const char* filename) :
 	GameObject(game, position, scale),
 	mStage(stage),
-	mFilename(0),
+	mFilename(filename),
 	mCount(0)
 {
 	BoxCollider* box = new BoxCollider(this, 0, false);
-	mFilename = "Image/Flag.png";
 	TextureSprite* text = new TextureSprite(this, 0, mFilename);
 }
 Flag::~Flag() {
@@ -75,7 +116,6 @@ void Flag::RotateStage(int stagenum) {
 void Flag::CollideDo() {
 	if (mCount == 10) {
 		RotateStage(mStage);
-		cout << "aa" << endl;
 	}
 	mCount = 0;
 }
