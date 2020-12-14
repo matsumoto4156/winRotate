@@ -1,0 +1,2 @@
+一個目のステージ StageData/Stage1.txt StagePicture/Stage1.png
+2個目のステージ StageData/InitStage.txt StagePicture/Stage1.png

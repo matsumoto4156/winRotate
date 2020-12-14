@@ -11,7 +11,7 @@
 Player::Player(Game* Game, vector2 position, int scale) :
 	GameObject(Game, position, scale),
 	mMoveSpeed(0.0f),
-	mMaxSpeed(500.0f),
+	mMaxSpeed(450.0f),
 	mRightKey(SDL_SCANCODE_RIGHT),
 	mLeftKey(SDL_SCANCODE_LEFT),
 	mJumpKey(SDL_SCANCODE_SPACE),
@@ -33,7 +33,8 @@ Player::~Player() {
 }
 // 独自の更新関数
 void Player::UpdateObject(float deltaTime) {
-	// ウゴキヲトメル
+
+		// ウゴキヲトメル
 	if (mWaitTime != 0.0f) {
 		mWaitTime -= deltaTime;
 		if (mWaitTime <= 0.0f) {
@@ -45,15 +46,16 @@ void Player::UpdateObject(float deltaTime) {
 
 	if (mMoveSpeed != 0.0f) {
 		// 前にぶつかるとスピード大幅減
-		if (mCencer & FORWARD) {
-			mMoveSpeed = 0.0f;
-			mJumpForce *= 0.2f;
+		if (((mCencer & FORWARD) && !(mCencer & BOTTOM)) || (mCencer & FORWALL)){
+			mMoveSpeed -= 50.0f;
+			//mJumpForce *= 0.3f;
 		}
+
+		// 移動とそのスピードに応じてスプライトを交換
 		else {
-			// 移動とそのスピードに応じてスプライトを交換
 			mPosition.x += mDirection * mMoveSpeed * deltaTime;
 			SwitchText(mMoveSpeed * deltaTime);
-			mMoveSpeed *= 0.95f;
+			mMoveSpeed *= 0.94f;
 		}
 
 		// 0に近いとき0にする
@@ -64,11 +66,11 @@ void Player::UpdateObject(float deltaTime) {
 	}
 	if (mJumpForce != 0.0f) {
 		if(mCencer & HEAD){
-			mJumpForce *= 0.2f;
+			mJumpForce = 0.0f;
 		}
 		else {
 			mPosition.y -= mJumpForce * deltaTime;
-			mJumpForce -= 40.0f;
+			mJumpForce -= 50.0f;
 		}
 
 		if (mJumpForce < 1.0f) {
@@ -81,38 +83,39 @@ void Player::UpdateObject(float deltaTime) {
 }
 // 入力に応じてオブジェクトを動かす
 void Player::InputMove(const uint8_t* keyState) {
-	
-	// ジャンプ (地面かつ前のフレームで押されていない)
-	if (keyState[mJumpKey]){
-		if ((mCencer & FOOT) && !mIsJump) {
-			mJumpForce = 1000.0f;
-		}
-		mIsJump = true;
-	}
-	else {
-		mIsJump = false;
-	}
+	// 待ちの時は受け付けない
+	if (mWaitTime == 0.0f) {
 
-	// 地面についているとき横移動
-	if (mCencer & FOOT){
-		if (keyState[mRightKey]) {
+		// ジャンプ (地面かつ前のフレームで押されていない)
+		if (keyState[mJumpKey]) {
+			if ((mCencer & BOTTOM) && !mIsJump) {
+				mJumpForce = 1000.0f;
+			}
+			mIsJump = true;
+		}
+		else {
+			mIsJump = false;
+		}
+
+		// 横移動
+		if (keyState[mRightKey] || keyState[mLeftKey]) {
 			// 方向転換
-			if (mDirection != 1) {
+			if (keyState[mRightKey] && mDirection != 1) {
 				mMoveSpeed = 0;
 				mDirection = 1;
 			}
-			if (mMaxSpeed > mMoveSpeed) {
-				mMoveSpeed += 50;
-			}
-		}
-		else if (keyState[mLeftKey]) {
-			// 方向転換
-			if (mDirection != -1) {
+			else if (keyState[mLeftKey] && mDirection != -1) {
 				mMoveSpeed = 0;
 				mDirection = -1;
 			}
+
 			if (mMaxSpeed > mMoveSpeed) {
-				mMoveSpeed += 50;
+				if (mCencer & FOOT) {
+					mMoveSpeed += 40.0f;
+				}
+				else {
+					mMoveSpeed += 20.0f;
+				}
 			}
 		}
 	}
@@ -140,6 +143,10 @@ void Player::InitializeTexture() {
 	mFilename = "Image/Cat3.png";
 	mTexts.emplace_back(new TextureSprite(this, 0, mFilename, false));
 	mTexts[mTextNum]->SetState(true);
+
+	for (auto text : mTexts) {
+		text->SetDrawOrder(5);
+	}
 }
 // スプライトでアニメーション
 void Player::SwitchText(float time) {

@@ -6,7 +6,9 @@ public:
 	enum Cencer {
 		HEAD = 1,
 		FORWARD = 2,
-		FOOT = 4
+		FOOT = 4,
+		BOTTOM = 8,
+		FORWALL = 16
 	};
 	Player(class Game* Game, vector2 position, int scale);
 	~Player();
@@ -16,9 +18,11 @@ public:
 	void InputMove(const uint8_t* keyState);
 	// 動きを止める
 	void IsKeynematic(float time);
-	// 地面についているか判断
+	// センサー
 	void SetCencer(unsigned char cencer) { mCencer = cencer; };
 	bool GetGround() { return mCencer & FOOT; };
+	// すぴーど
+	float GetSpeed() { return mMoveSpeed * mDirection; };
 	// プレイヤーの方向(1か-1か)
 	int GetDir() { return mDirection; };
 	void SetPos(vector2 position);

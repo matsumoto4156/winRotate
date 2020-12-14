@@ -18,76 +18,83 @@ PhisicManager::~PhisicManager() {
 void PhisicManager::ManagePlayer() {
 
 	// 最も近いものと当たり判定を行う
-	float dist1 = 1000.0f;
-	float dist2 = 1100.0f;
-	ColliderComponent* target1 = nullptr;
-	ColliderComponent* target2 = nullptr;
+	float dist[4] = { 1000.0f, 1100.0f,1200.0f,1300.0f };
+	ColliderComponent* target[4] = { nullptr, nullptr, nullptr, nullptr };
 	vector2 pos = mPlayerCollider->GetPos();
 
-	//unsigned char flag = mPlayerCollider->GetPlayerStage();
 	for (auto b : mBoxes) {
-		//if ((flag & static_cast<unsigned char>(pow(2,(b->GetOwner()->GetStagenum())))) != 0) {
 		float a = mPlayer->GetPos().distance(b->GetPos());
-		if (a < dist2) {
-			if (a < dist1) {
-				dist2 = dist1;
-				dist1 = a;
-				target2 = target1;
-				target1 = b;
+		if (a < dist[3]) {
+			int k = 3;
+			while (dist[k-1] > a && k > 0) {
+				dist[k] = dist[k - 1];
+				target[k] = target[k - 1];
+				k -= 1;
 			}
-			else {
-				dist2 = a;
-				target2 = b;
-			}
+			dist[k] = a;
+			target[k] = b;
 		}
 	}
-	if (target1 == nullptr && target2 == nullptr) {
+	if (target[1] == nullptr && target[2] == nullptr) {
 		SDL_Log("No Block in Player Stage");
 		return;
 	}
 	// 当たり判定センサーを動かす
-	unsigned char cencer = Cencer(target1) | Cencer(target2);
-	Adjust(mPlayerCollider, target1);
-	Adjust(mPlayerCollider, target2);
+	unsigned char cencer = 0;
+	for (int i = 0; i < 4; ++i) {
+		int on = Adjust(mPlayerCollider, target[i]);
+		if (on != 0) target[i]->GetOwner()->CollideDo(mPlayer, on);
+		cencer |= Cencer(target[i]);
+	}
 	mPlayer->SetCencer(cencer);
 
 	
 	for (ColliderComponent* move : mMoves) {
+		move->GetOwner()->SetGround(false);
+
 		// 最も近いものと当たり判定を行う
-		float dist1 = 1000.0f;
-		float dist2 = 1100.0f;
-		ColliderComponent* target1 = nullptr;
-		ColliderComponent* target2 = nullptr;
+		float dist[4] = { 1000.0f, 1100.0f,1200.0f,1300.0f };
+		ColliderComponent* target[4] = { nullptr, nullptr, nullptr, nullptr };
 		vector2 pos = move->GetPos();
+
 		for (auto b : mBoxes) {
 			float a = move->GetPos().distance(b->GetPos());
-			if (a == 0.0f) continue;
-			if (a < dist2) {
-				if (a < dist1) {
-					dist2 = dist1;
-					dist1 = a;
-					target2 = target1;
-					target1 = b;
+			if (a < dist[3] && a != 0) {
+				int k = 3;
+				while (dist[k - 1] > a && k > 0) {
+					dist[k] = dist[k - 1];
+					target[k] = target[k - 1];
+					k -= 1;
 				}
-				else {
-					dist2 = a;
-					target2 = b;
-				}
+				dist[k] = a;
+				target[k] = b;
 			}
 		}
-		if (target1 == nullptr && target2 == nullptr) {
-			SDL_Log("No Block in Player Stage");
+		if (target[0] == nullptr && target[1] == nullptr) {
+			SDL_Log("No Block in Block Stage");
 			return;
 		}
-		Adjust(move, target1);
-		Adjust(move, target2);
+		// 当たり判定
+		for (int i = 0; i < 4; ++i) {
+			int on = Adjust(move, target[i]);
+		}
 	}
+
 }
 
 
 
-// 当たり判定
-bool PhisicManager::Adjust(ColliderComponent* move, ColliderComponent* target){
+// 当たり判定(0あたってない、1横から、2縦から)
+int PhisicManager::Adjust(ColliderComponent* move, ColliderComponent* target){
+	// 地面判定
+	vector2 foot = move->GetPos();
+	foot.y = move->GetLeftBottom().y + 2.0f;
+	bool ground = target->GetLeftBottom().x <= foot.x &&
+		foot.x <= target->GetRightTop().x &&
+		target->GetRightTop().y <= foot.y &&
+		foot.y <= target->GetLeftBottom().y;
+	if (!move->GetOwner()->GetGround()) move->GetOwner()->SetGround(ground);
+
 
 	bool no = move->GetRightTop().x < target->GetLeftBottom().x ||
 		target->GetRightTop().x < move->GetLeftBottom().x ||
@@ -96,15 +103,10 @@ bool PhisicManager::Adjust(ColliderComponent* move, ColliderComponent* target){
 
 	// 当たっていなければ終了
 	if (no) {
-		return false;
-	}
-	// 当たっているとき関数
-	target->OnCollider();
-	// 衝突しないときcencerいらない
-	if (!target->GetIsColl()) {
-		return false;
+		return 0;
 	}
 
+	vector2 pos = move->GetOwner()->GetPos();
 	// 当たっていたら位置を調節
 	float dx1 = move->GetRightTop().x - target->GetLeftBottom().x;
 	float dx2 = move->GetLeftBottom().x - target->GetRightTop().x;
@@ -117,59 +119,91 @@ bool PhisicManager::Adjust(ColliderComponent* move, ColliderComponent* target){
 		dy = dy2;
 	}
 	else { dy = dy1; };
+
+
+	int k = 0;
+	// 横から衝突
 	if (std::abs(dy) > std::abs(dx)) {
-		vector2 pos = move->GetOwner()->GetPos();
 		pos.x -= dx;
-		move->GetOwner()->SetPos(pos);
+		k = 1;
 	}
+	// 上下から衝突
 	else {
-		vector2 pos = move->GetOwner()->GetPos();
 		pos.y -= dy;
-		move->GetOwner()->SetPos(pos);
+		k = 2;
 	}
-	// プレイヤーのコリダーも更新
+
+	// 衝突しないときcencerいらない
+	if (!target->GetIsColl()) {
+		return k;
+	}
+	move->GetOwner()->SetPos(pos);
+	//コリダーも更新
 	move->SetLoc();
+	return k;
 }
 
 // センサー判定
 unsigned char PhisicManager::Cencer(ColliderComponent* target) {
 	if (!target->GetIsColl()) return 0;
 
-
 	// センサーフラッグ
 	unsigned char cencer = 0;
 	float height = (mPlayerCollider->GetLeftBottom().y - mPlayerCollider->GetRightTop().y) / 2;
 	float width = (mPlayerCollider->GetRightTop().x - mPlayerCollider->GetLeftBottom().x) / 2;
-	width -= 2.0f;
-	height -= 1.0f;
 	// 頭がついているか判定
 	vector2 head;
 	head.x = mPlayerCollider->GetPos().x;
-	head.y = mPlayerCollider->GetRightTop().y - 0.3f;
+	head.y = mPlayerCollider->GetRightTop().y - 3.0f;
 	cencer |= target->GetLeftBottom().x <= head.x &&
 		head.x <= target->GetRightTop().x &&
 		target->GetRightTop().y <= head.y &&
 		head.y <= target->GetLeftBottom().y;
 	// 当たっているか判定
-	vector2 forward;
-	for (int i = 0; i < 3; ++i) {
-		forward.x = mPlayerCollider->GetPos().x + (width + 2.2f) * mPlayer->GetDir();
-		forward.y = mPlayerCollider->GetRightTop().y + 1.0f + height * i;
-		cencer |= ((target->GetLeftBottom().x <= forward.x &&
-			forward.x <= target->GetRightTop().x &&
-			target->GetRightTop().y <= forward.y &&
-			forward.y <= target->GetLeftBottom().y) << 1);
+	if (!target->GetOwner()->IsCencer()) cencer |= 0<<1;
+	else {
+		vector2 forward;
+		float h = height - 4.0f;
+		for (int i = 0; i < 3; ++i) {
+			forward.x = mPlayerCollider->GetPos().x + (width + 0.1f) * mPlayer->GetDir();
+			forward.y = mPlayerCollider->GetRightTop().y + 4.0f + h * i;
+			cencer |= ((target->GetLeftBottom().x <= forward.x &&
+				forward.x <= target->GetRightTop().x &&
+				target->GetRightTop().y <= forward.y &&
+				forward.y <= target->GetLeftBottom().y) << 1);
+		}
 	}
 	// 地面についているか判定
 	vector2 foot;
+	float w = width - 4.0f;
 	for (int i = 0; i < 3; ++i) {
-		foot.x = mPlayerCollider->GetLeftBottom().x + 1.0f + width*i;
-		foot.y = mPlayerCollider->GetLeftBottom().y + 0.2f;
+		foot.x = mPlayerCollider->GetLeftBottom().x + 4.0f + w*i;
+		foot.y = mPlayerCollider->GetLeftBottom().y + 1.0f;
 		cencer |= ((target->GetLeftBottom().x <= foot.x &&
 			foot.x <= target->GetRightTop().x &&
 			target->GetRightTop().y <= foot.y &&
 			foot.y <= target->GetLeftBottom().y) << 2);
 	}
+	// 中央下判定
+	vector2 bottom;
+	bottom.x = mPlayerCollider->GetPos().x;
+	bottom.y = mPlayerCollider->GetLeftBottom().y + 2.0f;
+	cencer |= ((target->GetLeftBottom().x <= bottom.x &&
+		bottom.x <= target->GetRightTop().x &&
+		target->GetRightTop().y <= bottom.y &&
+		bottom.y <= target->GetLeftBottom().y) << 3);
+	// 中央前判定
+	if (!target->GetOwner()->IsCencer()) cencer |= 0 << 4;
+	else {
+		vector2 forwall;
+		forwall.x = mPlayerCollider->GetPos().x + (width + 0.5f) * mPlayer->GetDir();
+		forwall.y = mPlayerCollider->GetPos().y;
+		cencer |= ((target->GetLeftBottom().x <= forwall.x &&
+			forwall.x <= target->GetRightTop().x &&
+			target->GetRightTop().y <= forwall.y &&
+			forwall.y <= target->GetLeftBottom().y) << 4);
+	}
+	cencer |= 0 << 4;
 	return cencer;
 }
 

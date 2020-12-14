@@ -9,12 +9,12 @@
 
 class Game {
 public:
-	Game();
+	Game(class SceneManager* scmana, const char* stagefile, SDL_Window* window, SDL_Renderer* renderer, bool displayMode = false);
 	~Game();
 	// 初期化
 	bool Initialize();
 	// ループの内容
-	void MainLoop();
+	bool MainLoop();
 	// ゲームを終了する
 	void Shutdown();
 	// ゲームオブジェクトを追加/消去
@@ -43,25 +43,30 @@ private:
 	void InitStageLoc();
 	// 背景を描写する
 	void MakeBack();
+	// プレイヤーを出す
+	void SetPlayer();
 	// ループのヘルパー関数群
-	void ProcessInput();
+	void Input();
 	void UpdateGame();
-	void GenerateOutput();
+	void Display();
 	// 画像読み取りの関数
 	SDL_Texture* LoadTexture(const char* filename);
 
+	// シーンマネージャー
+	class SceneManager* mScmana;
+	// 物理かんりのクラス
+	class PhisicManager* mPManager;
 	// プレイヤーはもっておこう
 	class Player* mPlayer;
+	// UIは自分で管理する
+	class UI* mUI;
 
 	// SDLのウィンドウ
 	SDL_Window* mWindow;
 	SDL_Renderer* mRenderer;
-	bool mIsRunning;
-	Uint32 mPreviousTime;
 
 	// テクスチャーのマップ
 	std::unordered_map<const char*, SDL_Texture*> mTextures;
-
 	// オブジェトの配列
 	std::vector<class GameObject*> mObjects;	  // 活動組
 	std::vector<class GameObject*> mWaitObjects;  // 待機組
@@ -69,12 +74,19 @@ private:
 	std::vector<class SpriteComponent*> mSprites;
 	// ステージ配列
 	class Stage mStage;
+
+	// 動いているか
+	bool mIsRunning;
+	// 前回の時間
+	Uint32 mPreviousTime;
+	// ディスプレイモードかどうか
+	bool mDisplayMode;
 	// 更新中かを返す
 	bool mUpdatingObjects;
 	// ステージの座標
 	vector2* mLeftTops;
-	// 物理かんりのクラス
-	class PhisicManager* mPManager;
+	// ステージファイルの名前
+	const char* mStageFile;
 	// 人マス当たりの大きさ
 	int mSize;
 };

@@ -14,9 +14,8 @@ ColliderComponent::~ColliderComponent() {
 // 毎回呼び出す
 void ColliderComponent::SetLoc(){
 	mPos = mOwner->GetPos();
-	float scale = static_cast<float>(mOwner->GetScale());
-	mRightTop = mPos - vector2{ -(scale / 2), scale / 2 };
-	mLeftBottom = mPos + vector2{ -(scale / 2), scale / 2 };
+	mRightTop = mPos - vector2{ -(mOwner->GetWidth() / 2), mOwner->GetHeight() / 2 };
+	mLeftBottom = mPos + vector2{ -(mOwner->GetWidth() / 2), mOwner->GetHeight() / 2 };
 }
 
 
@@ -37,9 +36,6 @@ BoxCollider::~BoxCollider() {
 void BoxCollider::Update(float deltaTime) {
 	SetLoc();
 }
-void BoxCollider::OnCollider() {
-	mOwner->CollideDo();
-}
 
 
 
@@ -58,6 +54,7 @@ PlayerCollider::~PlayerCollider() {
 }
 // 更新
 void PlayerCollider::Update(float deltaTime) {
+
 	// 位置を取得
 	SetLoc();
 	// プレイヤーの位置を更新

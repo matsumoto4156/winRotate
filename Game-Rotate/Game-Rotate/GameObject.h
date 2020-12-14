@@ -1,3 +1,4 @@
+
 #pragma once
 #include <vector>
 #include "vector2.h"
@@ -21,9 +22,10 @@ public:
 	// 自分がいるステージを判断
 	void SetStagenum();
 	// 当たり判定のときに呼ばれる関数
-	virtual void CollideDo();
+	virtual void CollideDo(GameObject* go, int from) {};
 	// 動きを止める
 	virtual void IsKeynematic(float time) {};
+
 
 	// ゲッター・セッター
 	void SetState(State state) { mState = state; };
@@ -31,6 +33,10 @@ public:
 	void SetScale(int scale) { mScale = scale; };
 	void SetRotation(float radian) { mRotation = radian; };
 	void SetIsRotate(bool isRotate ) { mIsRotate = isRotate; };
+	void SetWidth(float width) { mWidth = width; };
+	void SetHeight(float height) { mHeight = height; };
+	float GetWidth() { return mWidth; };
+	float GetHeight() { return mHeight; };
 	bool GetIsRotate() { return mIsRotate;  };
 	State GetState() { return mState; };
 	vector2 GetPos() { return mPosition; };
@@ -45,14 +51,23 @@ public:
 	void AddComponent(class Component* Component);
 	void RemoveComponent(class Component* Component);
 
+	// センサーに引っかかるか
+	virtual bool IsCencer() { return true; };
+
 	// 地面判定用（ORしてね）
+	virtual void SetGround(bool yes) {  };
 	virtual bool GetGround() { return false; };
+	// すぴーど
+	virtual float GetSpeed() { return 0.0f; };
 protected:
 	// オブジェクトの状態
 	State mState;
 	// 座標
 	vector2 mPosition; // 中心
 	int mScale;
+	//横・たて
+	float mWidth;
+	float mHeight;
 	float mRotation; // ラジアン
 	// オブジェクトが持つコンポーネント
 	std::vector<class Component*> mComponents;

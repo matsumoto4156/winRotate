@@ -8,91 +8,84 @@
 #include "PhisicManager.h"
 #include "SpriteComponent.h"
 #include "RotateComponent.h"
+#include "SceneManager.h"
+#include "UI.h"
 #include <fstream>
 #include <string>
 
-#include <iostream>
 
 
 
-Game::Game() :
-	mWindow(0),
-	mRenderer(0),
+Game::Game(SceneManager* scmana, const char* stageFile, SDL_Window* window, SDL_Renderer* renderer, bool displaymode) :
+	mScmana(scmana),
+	mStageFile(stageFile),
+	mWindow(window),
+	mRenderer(renderer),
+	mDisplayMode(displaymode),
+
+	mPManager(0),
+	mPlayer(0),
+	mUI(0),
 	mIsRunning(true),
 	mPreviousTime(0),
 	mUpdatingObjects(false),
-	mPlayer(0),
 	mLeftTops(0),
-	mPManager(0),
 	mSize(0)
 {
-
+	Initialize();
 }
 
 Game::~Game() {
-	delete[] mPlayer;
-	delete[] mLeftTops;
+	delete[] mScmana;
 	delete[] mPManager;
-	mWindow = 0;
-	mRenderer = 0;
-	mPlayer = 0;
-	mLeftTops = 0;
+	delete[] mPlayer;
+	delete[] mUI;
+	delete[] mLeftTops;
+	mScmana = 0;
 	mPManager = 0;
+	mPlayer = 0;
+	mUI = 0;
+	mLeftTops = 0;
 }
 
 
 // 初期化
 bool Game::Initialize() {
-	// SDL
-	int sdlResult = SDL_Init(SDL_INIT_VIDEO);
-	if (sdlResult != 0) {
-		SDL_Log("SDLを初期化できません : %s", SDL_GetError());
-		return false;
-	}
-	//ウィンドウ
-	mWindow = SDL_CreateWindow(
-		"Game",
-		100,
-		100,
-		1024,
-		900,
-		0
-	);
-	if (!mWindow) {
-		SDL_Log("ウィンドウの作成に失敗 : %s", SDL_GetError());
-		return false;
-	}
-	//レンダラー
-	mRenderer = SDL_CreateRenderer(
-		mWindow,
-		-1,
-		SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
-	);
-	//画像
-	IMG_Init(IMG_INIT_PNG);
+	mUI = new UI(mScmana, mWindow);
 
 	// データ読み込み
 	LoadData();
-
+	// ディスプレイモードでなければプレイヤーを出す
+	if (!mDisplayMode) {
+		SetPlayer();
+	}
 
 	return true;
 }
 
 
+// プレイヤーを出す
+void Game::SetPlayer() {
+	// プレイヤーを生成
+	vector2 pos = { 332 , 770 };
+	mPlayer = new Player(this, pos, 38);
+	mPManager->SetPlayer(mPlayer);
+}
+
 // ループの内容
-void Game::MainLoop() {
-	while (mIsRunning) {
-		ProcessInput();
+bool Game::MainLoop() {
+
+	if (mPlayer) {
+		Input();
 		UpdateGame();
-		GenerateOutput();
 	}
+	Display();
+	return mIsRunning;
 }
 
 // ゲームを終了する
 void Game::Shutdown() {
-	SDL_DestroyWindow(mWindow);
-	SDL_DestroyRenderer(mRenderer);
-	SDL_Quit();
+	mScmana->Shutdown();
 }
 
 // ゲームオブジェクトを追加
@@ -136,7 +129,7 @@ SDL_Texture* Game::GetTexture(const char* filename) {
 
 // スプライトを追加
 void Game::AddSprite(SpriteComponent* sprite) {
-	int order = sprite->GetUpdateOrder();
+	int order = sprite->GetDrawOrder();
 	auto iter = mSprites.begin();
 	for (; iter != mSprites.end(); ++iter) {
 		if (order < (*iter)->GetDrawOrder()) {
@@ -167,11 +160,14 @@ void Game::Rotate(int stage) {
 	// オブジェクトの更新
 	mUpdatingObjects = true;
 	for (GameObject* object : mObjects) {
-		object->IsKeynematic(1.5f);
-		if (object->GetStagenum() == stage && object->GetIsRotate()) {
-			object->Go(true);
+		if (object->GetStagenum() == stage){
+			object->IsKeynematic(1.5f);
+			if (object->GetIsRotate()) {
+				object->Go(true);
+			}
 		}
 	}
+	mPlayer->IsKeynematic(1.8f);
 	mUpdatingObjects = false;
 }
 
@@ -220,6 +216,10 @@ void Game::LoadData() {
 					else if (target == 11) {
 						StickBlock* sBlock = new StickBlock(this, pos, mSize);
 					}
+					// 木箱ブロック
+					else if (target == 12) {
+						CrateBlock* cBlock = new CrateBlock(this, pos, mSize);
+					}
 					// Flag
 					else if (6 <= target && target <= 9) {
 						Flag* flag;
@@ -241,10 +241,6 @@ void Game::LoadData() {
 		}
 	}
 
-	// プレイヤーを生成
-	pos = {510 , 300 };
-	mPlayer = new Player(this, pos, 38);
-	mPManager->SetPlayer(mPlayer);
 }
 
 // ステージの読み取り
@@ -253,7 +249,7 @@ void Game::LoadStage() {
 	int lendth;
 
 	using namespace std;
-	const char* filename = "StageData.txt";
+	const char* filename = mStageFile;
 	ifstream file(filename, ifstream::binary);
 	if (!file) { SDL_Log("Could not load StageData.txt!"); return; };
 	string str;
@@ -278,6 +274,7 @@ void Game::LoadStage() {
 			}
 		}
 	}
+	file.close();
 	// メモリ開放
 	delete[] buffa;
 	mStage.Show();
@@ -288,13 +285,14 @@ void Game::LoadStage() {
 
 // ステージ座標の読み取り
 void Game::InitStageLoc() {
+
 	float size = static_cast<float>(mSize);
 	// 初期化
 	mLeftTops = new vector2[8];
-	mLeftTops[0] = { 112, 450 };
-	mLeftTops[1] = { 512, 450 };
-	mLeftTops[2] = { 512, 50 };
-	mLeftTops[3] = { 112, 50 };
+	mLeftTops[0] = { 75, 500 };
+	mLeftTops[1] = { 475, 500 };
+	mLeftTops[2] = { 475, 100 };
+	mLeftTops[3] = { 75, 100 };
 	mLeftTops[4] = mLeftTops[0] - vector2{size, 0};
 	mLeftTops[5] = mLeftTops[1];
 	mLeftTops[6] = mLeftTops[2] - vector2{ 0, size };
@@ -306,43 +304,43 @@ void Game::MakeBack() {
 	vector2 pos;
 	SpriteComponent::Color color;
 
-	pos = { 312, 650 };
+	pos = { mLeftTops[0].x + 200, mLeftTops[0].y + 200 };
 	Background* back1 = new Background(this, pos, 400, "Image/Stage0.png");
 	back1->SetIsRotate(true);
 
-	pos = { 712, 650 };
+	pos = { mLeftTops[1].x + 200, mLeftTops[0].y + 200 };
 	Background* back2 = new Background(this, pos, 400, "Image/Stage1.png");
 	back2->SetIsRotate(true);
 
-	pos = { 712, 250 };
+	pos = { mLeftTops[0].x + 200, mLeftTops[2].y + 200 };
 	Background* back3 = new Background(this, pos, 400, "Image/Stage2.png");
 	back3->SetIsRotate(true);
 
-	pos = { 312, 250 };
+	pos = { mLeftTops[1].x + 200, mLeftTops[2].y + 200 };
 	Background* back4 = new Background(this, pos, 400, "Image/Stage3.png");
 	back4->SetIsRotate(true);
 }
 
 // 入力関係
-void Game::ProcessInput() {
-
+void Game::Input() {
 
 	// イベントを取得
 	SDL_Event event;
 	// キューにイベントがあれば処理し終わるまでくりかえす（複数のイベント対策）
 	while (SDL_PollEvent(&event)) {
+		mUI->Input(event);
 		switch (event.type) {
-		case SDL_QUIT:
-			mIsRunning = false;
-			break;
+			case SDL_QUIT:
+				mIsRunning = false;
+				break;
 		}
 	}
 
 	// キーを取得してプレイヤーに渡す
 	const Uint8* state = SDL_GetKeyboardState(NULL);
-	if (state[SDL_SCANCODE_ESCAPE]) {
+	/*if (state[SDL_SCANCODE_ESCAPE]) {
 		mIsRunning = false;
-	}
+	}*/
 	mPlayer->InputMove(state);
 }
 
@@ -373,7 +371,7 @@ void Game::UpdateGame() {
 }
 
 // 描写
-void Game::GenerateOutput() {
+void Game::Display() {
 
 	SDL_SetRenderDrawColor(mRenderer, 118, 118, 118, 255);
 	SDL_RenderClear(mRenderer);
@@ -381,13 +379,19 @@ void Game::GenerateOutput() {
 	for (auto sp : mSprites) {
 		sp->Draw(mRenderer);
 	}
-	for (int y = 0; y < 20; y++) {
-		for (int x = 0; x < 20; x++) {
-			SDL_SetRenderDrawColor(mRenderer, 112, 112, 112, 112);
-			SDL_Rect back{ 112+x*40, 50+y*40, 40, 40 };
-			SDL_RenderDrawRect(mRenderer, &back);
+	mUI->Draw(mRenderer);
+
+	// グリッド線の表示
+	if (mDisplayMode) {
+		for (int y = 0; y < 20; y++) {
+			for (int x = 0; x < 20; x++) {
+				SDL_SetRenderDrawColor(mRenderer, 112, 112, 112, 112);
+				SDL_Rect back{ static_cast<int>(mLeftTops[0].x) + x * 40, static_cast<int>(mLeftTops[2].y) + y * 40, 40, 40 };
+				SDL_RenderDrawRect(mRenderer, &back);
+			}
 		}
 	}
+
 	SDL_RenderPresent(mRenderer);
 	
 }

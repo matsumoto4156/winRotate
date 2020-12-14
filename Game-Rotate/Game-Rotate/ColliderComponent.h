@@ -11,8 +11,6 @@ public:
 	virtual void Update(float deltaTime) {};
 	// 毎回呼び出す
 	void SetLoc();
-	// ぶつかっているとき呼ばれる
-	virtual void OnCollider() {};
 	// ぶつかるかどうか
 	virtual bool GetIsColl() { return true; };
 	// ゲッター
@@ -31,8 +29,6 @@ public:
 	~BoxCollider();
 	// 更新
 	void Update(float deltaTime);
-	// ぶつかっているとき呼ばれる
-	void OnCollider();
 	// すかすかどうか
 	bool GetIsColl() { return mCollide; };
 private:

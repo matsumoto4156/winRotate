@@ -72,7 +72,7 @@ void TextureSprite::Draw(SDL_Renderer* renderer) {
 	vector2 leftTop;
 	int scale = mOwner->GetScale();
 	// 場所（標準スケールは1）
-	leftTop.x = pos.x - scale / 2;
+	leftTop.x = pos.x - (scale * ratio) / 2;
 	leftTop.y = pos.y - scale / 2;
 	SDL_Rect back = { static_cast<int>(leftTop.x), static_cast<int>(leftTop.y), static_cast<int>(scale*ratio), static_cast<int>(scale) };
 	float deg = 180 * mOwner->GetRotation();
@@ -85,6 +85,8 @@ void TextureSprite::Draw(SDL_Renderer* renderer) {
 		nullptr,
 		mFlip
 	);
+	mOwner->SetWidth(scale * ratio);
+	mOwner->SetHeight(scale * 1.0f);
 }
 
 // 画像の向きを変える

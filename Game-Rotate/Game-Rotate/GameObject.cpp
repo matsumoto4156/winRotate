@@ -11,8 +11,12 @@ GameObject::GameObject(class Game* game, vector2 position, int scale) :
 	mPosition(position),
 	mScale(scale),
 	mIsRotate(false),
-	mGo(false)
+	mGo(false),
+	mWidth(0),
+	mHeight(0)
 {
+	mWidth = static_cast<float>(scale / 2);
+	mHeight= static_cast<float>(scale / 2);
 	mGame->AddObject(this);
 	SetStagenum();
 	RotateComponent* rotate = new RotateComponent(this, 0);
@@ -58,10 +62,6 @@ void GameObject::SetStagenum() {
 			mStagenum = 1;
 		}
 	}
-}
-// ìñÇΩÇËîªíËÇÃÇ∆Ç´Ç…åƒÇŒÇÍÇÈä÷êî
-void GameObject::CollideDo() {
-
 }
 
 

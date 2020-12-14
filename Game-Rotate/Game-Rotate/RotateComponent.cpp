@@ -20,10 +20,10 @@ RotateComponent::~RotateComponent() {
 // À•W‚ð“ü‚ê‚é
 void RotateComponent::Initialize() {
 	mStageLoc = new vector2[4];
-	mStageLoc[0] = { 312, 650 };
-	mStageLoc[1] = { 712, 650 };
-	mStageLoc[2] = { 712, 250 };
-	mStageLoc[3] = { 312, 250 };
+	mStageLoc[0] = mOwner->GetGame()->GetStageLoc(0) + vector2{ 200, 200 };
+	mStageLoc[1] = mOwner->GetGame()->GetStageLoc(1) + vector2{ 200, 200 };
+	mStageLoc[2] = mOwner->GetGame()->GetStageLoc(2) + vector2{ 200, 200 };
+	mStageLoc[3] = mOwner->GetGame()->GetStageLoc(3) + vector2{ 200, 200 };
 }
 
 // ‰ñ“]

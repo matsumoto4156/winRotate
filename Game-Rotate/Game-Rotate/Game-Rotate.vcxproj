@@ -88,13 +88,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Shiroyasha\outside-marumo\SDL2_image-2.0.5\include;C:\Users\Shiroyasha\outside-marumo\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\matsu\Documents\SDL2_ttf-2.0.15\include;C:\Users\Shiroyasha\outside-marumo\SDL2_image-2.0.5\include;C:\Users\Shiroyasha\outside-marumo\SDL2-2.0.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\Shiroyasha\outside-marumo\SDL2_image-2.0.5\lib\x86;C:\Users\Shiroyasha\outside-marumo\SDL2-2.0.12\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\matsu\Documents\SDL2_ttf-2.0.15\lib\x86;C:\Users\Shiroyasha\outside-marumo\SDL2_image-2.0.5\lib\x86;C:\Users\Shiroyasha\outside-marumo\SDL2-2.0.12\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -152,31 +152,43 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Block.cpp" />
+    <ClCompile Include="Button.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GravityComponent.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Background.cpp" />
+    <ClCompile Include="Make.cpp" />
+    <ClCompile Include="Menu.cpp" />
     <ClCompile Include="PhisicManager.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="SpriteComponent.cpp" />
     <ClCompile Include="Stage.cpp" />
     <ClCompile Include="ColliderComponent.cpp" />
     <ClCompile Include="RotateComponent.cpp" />
+    <ClCompile Include="Text.cpp" />
+    <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Background.h" />
     <ClInclude Include="Block.h" />
+    <ClInclude Include="Button.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GravityComponent.h" />
+    <ClInclude Include="Make.h" />
+    <ClInclude Include="Menu.h" />
     <ClInclude Include="PhisicManager.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="RotateComponent.h" />
+    <ClInclude Include="SceneManager.h" />
     <ClInclude Include="SpriteComponent.h" />
     <ClInclude Include="Stage.h" />
+    <ClInclude Include="Text.h" />
+    <ClInclude Include="UI.h" />
     <ClInclude Include="vector2.h" />
     <ClInclude Include="ColliderComponent.h" />
   </ItemGroup>

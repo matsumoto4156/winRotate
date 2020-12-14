@@ -18,8 +18,8 @@ public:
 	void AddMove(class ColliderComponent* box);
 	void RemoveMove(class ColliderComponent* box);
 private:
-	// 当たり判定
-	bool Adjust(class ColliderComponent* move, class ColliderComponent* target);
+	// 当たり判定(0あたってない、1横から、2縦から)
+	int Adjust(class ColliderComponent* move, class ColliderComponent* target);
 	// センサー判定
 	unsigned char Cencer(class ColliderComponent* target);
 
