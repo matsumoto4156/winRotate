@@ -13,7 +13,9 @@ Player::Player(Game* Game, vector2 position, int scale) :
 	mMoveSpeed(0.0f),
 	mMaxSpeed(450.0f),
 	mRightKey(SDL_SCANCODE_RIGHT),
+	mRightKey2(SDL_SCANCODE_D),
 	mLeftKey(SDL_SCANCODE_LEFT),
+	mLeftKey2(SDL_SCANCODE_A),
 	mJumpKey(SDL_SCANCODE_SPACE),
 	mDirection(1),
 	mFilename(0),
@@ -98,13 +100,13 @@ void Player::InputMove(const uint8_t* keyState) {
 		}
 
 		// ‰¡ˆÚ“®
-		if (keyState[mRightKey] || keyState[mLeftKey]) {
+		if (keyState[mRightKey] || keyState[mLeftKey] || keyState[mRightKey2] || keyState[mLeftKey2]) {
 			// •ûŒü“]Š·
-			if (keyState[mRightKey] && mDirection != 1) {
+			if ((keyState[mRightKey] || keyState[mRightKey2]) && mDirection != 1) {
 				mMoveSpeed = 0;
 				mDirection = 1;
 			}
-			else if (keyState[mLeftKey] && mDirection != -1) {
+			else if ((keyState[mLeftKey] || keyState[mLeftKey2]) && mDirection != -1) {
 				mMoveSpeed = 0;
 				mDirection = -1;
 			}

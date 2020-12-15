@@ -30,7 +30,6 @@ Menu::Menu(SceneManager* scmana, SDL_Window* window, SDL_Renderer* renderer) :
 }
 
 Menu::~Menu() {
-
 }
 
 
@@ -140,6 +139,7 @@ void Title::IsButton(bool isDown) {
 			mScmana->ChangeScene(SceneManager::RESET_MAKE);
 			break;
 		case 2:
+			mIsRunning = false;
 			break;
 		default:
 			mButtonNum = -1;

@@ -2,18 +2,20 @@
 #include "SDL.h"
 #include "vector2.h"
 
-class Button {
+
+// オブジェクトを配置するツール
+class Tool {
 public:
-	Button(class SceneManager* scmana, const char* filename, const char* filename_b);
-	~Button();
+	Tool(class Make* make, int objectnum);
+	~Tool();
 	// 位置を決める
 	void SetPosition(float x, float y);
 	// サイズを決める
 	void SetSize(int width, int height) { mTextWidth = width; mTextHeight = height; };
 	// ボタンが押されているか
 	bool IsButton(int x, int y);
-	// ボタンが押されているか
-	void ReButton() { mTexture = mNormalTexture; };
+	// テクスチャーを渡す
+	SDL_Texture* GetTexture() { return mTexture; };
 	// 描写
 	void Draw(SDL_Renderer* renderer);
 	// 下どれくらい使ったか
@@ -21,20 +23,27 @@ public:
 	// 横どれくらい使ったか
 	int GetUsuX() { return mTextWidth / 2; };
 private:
-	// テクスチャ
-	SDL_Texture* mTexture;
-	// 普通のテクスチャ
-	SDL_Texture* mNormalTexture;
-	// 押された時のテクスチャ
-	SDL_Texture* mPushTexture;
-	// ファイル名
-	const char* mFilename;
+	// 初期化
+	void Initialize();
+
+	// メイククラス
+	class Make* mMake;
 	// テクスチャの大きさ
 	int mTextWidth;
 	int mTextHeight;
-	// 座標情報
+	// どのオブジェクトか
+	int mObjectNumber;
+	// 選択されているか
+	bool mOnThis;
+	// テクスチャー
+	SDL_Texture* mTexture;
+	SDL_Texture* mFrameTexture;
+	SDL_Texture* mOnTexture;
+	// 位置
+	vector2 mPosition;
 	vector2 mLeftTop;
 	vector2 mRightDown;
-	// 真ん中
-	vector2 mPosition;
+	// ファイル名のリスト
+	const char** mFilenames;
 };
+

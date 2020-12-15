@@ -107,6 +107,7 @@ void SceneManager::MainLoop() {
 			break;
 		// プレイ画面
 		case RESET_MAKE:
+			SDL_SetWindowSize(mWindow, 1075, 950);
 			mMake = new Make(this, mWindow, mRenderer);
 			mScene = MAKE;
 			break;
@@ -116,6 +117,7 @@ void SceneManager::MainLoop() {
 			break;
 		// メイク終了
 		case END_MAKE:
+			SDL_SetWindowSize(mWindow, 950, 950);
 			delete[] mMake;
 			mMake = 0;
 			mScene = TITLE;

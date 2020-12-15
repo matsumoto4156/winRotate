@@ -62,7 +62,6 @@ void UI::Input(SDL_Event event){
 		isDown = false;
 		break;
 	}
-	if (isDown) cout << "sas" << endl;
 	IsButton(isDown);
 }
 

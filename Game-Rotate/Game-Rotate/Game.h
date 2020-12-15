@@ -28,10 +28,14 @@ public:
 	void AddSprite(class SpriteComponent* sprite);
 	void RemoveSprite(class SpriteComponent* sprite);
 	// ゲッター
+	class UI* GetUI() { return mUI; };
+	class Stage* GetStage() { return &mStage; };
 	vector2 GetStageLoc(int stageNumber);
 	class PhisicManager* GetPManager() { return mPManager; };
 	// 回転を行う
 	void Rotate(int stage);
+	// メイクモード用
+	void Draw(SDL_Renderer* renderer);
 	
 
 private:

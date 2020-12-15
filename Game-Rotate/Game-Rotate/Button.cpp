@@ -6,20 +6,20 @@
 
 Button::Button(SceneManager* scmana, const char* filename, const char* filename_b) :
 	mFilename(filename),
-	mText(0),
-	mNormalText(0),
-	mPushText(0),
+	mTexture(0),
+	mNormalTexture(0),
+	mPushTexture(0),
 	mTextWidth(0),
 	mTextHeight(0)
 {
-	mNormalText = scmana->SetTexture(mFilename);
-	mPushText = scmana->SetTexture(filename_b);
-	mText = mNormalText;
-	if (!mText) {
+	mNormalTexture = scmana->SetTexture(mFilename);
+	mPushTexture = scmana->SetTexture(filename_b);
+	mTexture = mNormalTexture;
+	if (!mTexture) {
 		SDL_Log("テクスチャを得られませんでした");
 	}
 	// 画像の大きさを取得
-	SDL_QueryTexture(mText, nullptr, nullptr, &mTextWidth, &mTextHeight);
+	SDL_QueryTexture(mTexture, nullptr, nullptr, &mTextWidth, &mTextHeight);
 }
 
 Button::~Button() {
@@ -45,7 +45,7 @@ bool Button::IsButton(int x, int y) {
 		mRightDown.y < y;
 
 	if (!no) {
-		mText = mPushText;
+		mTexture = mPushTexture;
 	}
 	return !no;
 }
@@ -55,7 +55,7 @@ void Button::Draw(SDL_Renderer* renderer) {
 	SDL_Rect back = { static_cast<int>(mLeftTop.x), static_cast<int>(mLeftTop.y), mTextWidth, mTextHeight };
 	SDL_RenderCopyEx(
 		renderer,
-		mText,
+		mTexture,
 		nullptr,
 		&back,
 		0,

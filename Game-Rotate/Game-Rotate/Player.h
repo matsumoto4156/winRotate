@@ -38,7 +38,9 @@ private:
 	const char* mFilename;
 	// 移動のためのキーコード
 	int mRightKey;
+	int mRightKey2;
 	int mLeftKey;
+	int mLeftKey2;
 	int mJumpKey;
 	// 移動スピードと上限
 	float mMoveSpeed;

@@ -171,6 +171,23 @@ void Game::Rotate(int stage) {
 	mUpdatingObjects = false;
 }
 
+// メイクモード用
+void Game::Draw(SDL_Renderer* renderer) {
+	for (auto sp : mSprites) {
+		sp->Draw(mRenderer);
+	}
+
+	// グリッド線の表示
+	if (mDisplayMode) {
+		for (int y = 0; y < 20; y++) {
+			for (int x = 0; x < 20; x++) {
+				SDL_SetRenderDrawColor(mRenderer, 112, 112, 112, 112);
+				SDL_Rect back{ static_cast<int>(mLeftTops[0].x) + x * 40, static_cast<int>(mLeftTops[2].y) + y * 40, 40, 40 };
+				SDL_RenderDrawRect(mRenderer, &back);
+			}
+		}
+	}
+}
 
 
 
@@ -184,64 +201,66 @@ void Game::LoadData() {
 	MakeBack();
 	mPManager = new PhisicManager();
 
+	// ステージ座標を作成
+	mStage.SetCCC(GetStageLoc(7), 40);
+	mStage.SetCoord(0, GetStageLoc(4), 40); 
+	mStage.SetCoord(1, GetStageLoc(5), 40);
+	mStage.SetCoord(2, GetStageLoc(6), 40);
+	mStage.SetCoord(3, GetStageLoc(7), 40);
+
 	vector2 pos;
 	int target = 0;
 	// それぞれのステージについて行う
-	for (int i = 0; i < 4; ++i) {
-
-		float x = GetStageLoc(4 + i).x + mSize/2;
-		float y = GetStageLoc(4 + i).y + mSize/2;
+	for (int stage = 0; stage < 4; ++stage) {
 		// 場所を特定するために一つずつ取り出す
-		for (int k = 0; k < mStage.GetY(); ++k) {
-			for (int l = 0; l < mStage.GetX(); ++l) {
+		for (int y = 0; y < mStage.GetY(); ++y) {
+			for (int x = 0; x < mStage.GetX(); ++x) {
 
 				// もし中身があれば
-				if (0 < (target = mStage(l, k, i)) ) {
-					pos.x = x + mSize * l;
-					pos.y = y + mSize * k;
-
+				if (-4 <= (target = mStage(x, y, stage))) {
+					pos = mStage.GetCoord(x, y, stage);
 					// ステージ関係(5まで)
-					if (target <= 5) {
+					if (target < 0) {
 						WallBlock* wBlock = new WallBlock(this, pos, mSize);
-						if (target == 2) wBlock->SetRotation(1.0f);
-						else if (target == 3) wBlock->SetRotation(0.5f);
-						else if (target == 4) wBlock->SetRotation(1.5f);
+						if (target == -3) wBlock->SetRotation(1.0f);
+						else if (target == -2) wBlock->SetRotation(0.5f);
+						else if (target == -1) wBlock->SetRotation(1.5f);
 					}
 					// 回るブロック
-					else if (target == 10) {
+					else if (target == 6) {
 						RotateBlock* rBlock = new RotateBlock(this, pos, mSize);
 						rBlock->SetIsRotate(true);
 					}
 					// くっつくブロック
-					else if (target == 11) {
+					else if (target == 7) {
 						StickBlock* sBlock = new StickBlock(this, pos, mSize);
 					}
 					// 木箱ブロック
-					else if (target == 12) {
+					else if (target == 8) {
 						CrateBlock* cBlock = new CrateBlock(this, pos, mSize);
 					}
 					// Flag
-					else if (6 <= target && target <= 9) {
-						Flag* flag;
-						if (target == 6) flag = new Flag(this, pos, mSize, target - 6, "Image/Flag0.png");
-						else {
-							if (target == 7) flag = new Flag(this, pos, mSize, target - 6, "Image/Flag1.png");
-							else if (target == 8) flag = new Flag(this, pos, 50, target - 6, "Image/Flag2.png");
-							else  flag = new Flag(this, pos, mSize, target - 6, "Image/Flag3.png");
-							flag->SetIsRotate(true);
-						}
-					}
-					// 想定外
-					else {
-						SDL_Log("Error!!(LoadStage)");
-						return;
+					else if (1 <= target && target <= 5) {
+						Flag* flag = nullptr;
+						if (target == 1) flag = new Flag(this, pos, mSize, 1, "Image/Flag0.png");
+						else if (target == 2) flag = new Flag(this, pos, mSize, 2, "Image/Flag1.png");
+						else if (target == 3) flag = new Flag(this, pos, 50, 3, "Image/Flag2.png");
+						else if (target == 4) flag = new Flag(this, pos, mSize, 4, "Image/Flag3.png");
+						if (mStage(x, y+1, stage) == 6) flag->SetIsRotate(true);
 					}
 				}
+				// 想定外
+				else {
+					SDL_Log("Error!!(LoadStage)");
+					return;
+				}
+
 			}
 		}
 	}
-
 }
+
+
 
 // ステージの読み取り
 void Game::LoadStage() {
